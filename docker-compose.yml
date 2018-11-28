@@ -1,0 +1,65 @@
+version: '2.2'
+services:
+
+  prom:
+    image: prom/prometheus:v2.4.3
+    ports:
+      - 9090:9090
+    volumes:
+      - "$PWD/prom:/etc/prometheus:ro"
+      - "$PWD/data:/prometheus-data"
+    command:
+      - --log.level=debug
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus-data
+      - --storage.tsdb.retention=15d
+
+  alertmanager:
+    image: prom/alertmanager:v0.15.3
+    restart: always
+    ports:
+      - 9093:9093
+    volumes:
+      - "$PWD/prom/alertmanager.yml:/alertmanager/alertmanager.yml:ro"
+    command:
+      - --config.file=/alertmanager/alertmanager.yml
+      - --log.level=debug
+
+  grafana:
+    image: grafana/grafana:5.3.4
+    ports:
+      - 3000:3000
+    environment:
+      GF_INSTALL_PLUGINS: "grafana-simple-json-datasource,camptocamp-prometheus-alertmanager-datasource"
+    volumes:
+      - "$PWD/grafana/var:/var/lib/grafana:rw"
+      - "$PWD/grafana/provisioning:/etc/grafana/provisioning:ro"
+
+
+  karma:
+    image: lmierzwa/karma:v0.16
+    ports:
+      - 8080:8080
+    volumes:
+      - "$PWD/karma:/etc/karma:ro"
+    command: karma --config.file=/etc/karma/karma.yml
+    working_dir: /etc/karma
+
+  node_exporter:
+    image: prom/node-exporter:v0.16.0
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points'
+      - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+
+  slides:
+    image: msoedov/hacker-slides
+    ports:
+      - 8090:8080
+    volumes:
+      - "$PWD/slides:/app/slides:rw"

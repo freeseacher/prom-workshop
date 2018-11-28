@@ -1,0 +1,37 @@
+# my global config
+# собирать будем раз в 10 секунд
+global:
+  scrape_interval:     10s # By default, scrape targets every 15 seconds.
+  evaluation_interval: 10s # By default, scrape targets every 15 seconds.
+ 
+# у нас есть правила алертинга для системы
+rule_files:
+  - rules/*.rules.yml
+ 
+# у нас есть алертменеджер живет там то
+alerting:
+  alert_relabel_configs:
+    # нам не хочется что бы сокращенные имена меток были в алертинге
+    - target_label: environment
+      source_labels: ['env']
+  alertmanagers:
+    # у нас есть только один alertmanager
+    - static_configs:
+      - targets:
+        - alertmanager:9093
+
+# сбор метрик
+scrape_configs:
+  # самомониторинг прометея
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['127.0.0.1:9090']
+        labels:
+           env: 'infrastructure'
+  # https://github.com/prometheus/prometheus/wiki/Default-port-allocations
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets:
+          - 'node_exporter:2020'
+        labels:
+          env: 'infrastructure'

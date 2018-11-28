@@ -1,0 +1,32 @@
+listen:
+  address: "0.0.0.0"
+  port: 8080
+  prefix: /
+log:
+  config: false
+  level: info
+alertmanager:
+  interval: 20s
+  servers:
+    - name: global
+      uri: http://alertmanager:9093
+      timeout: 10s
+      proxy: true
+annotations:
+  default:
+    hidden: true
+  hidden: []
+  visible:
+    - summary
+    - runbook
+custom:
+  css: /custom.css
+  js: /custom.js
+debug: true
+labels:
+  color:
+    unique:
+      - env
+  keep: []
+  strip:
+    - job
